@@ -11,10 +11,14 @@ export function createGlobal<T>(init: T): <T>() => [global: T, setGlobal: (state
 export function useAsync() {}
 
 // TODO
-export function usePrevious() {}
+export function usePrevious<T>(value: T): T {
+	const ref = React.useRef(value);
+	React.useEffect(() => ref.current = value, [value]);
+	return ref.current;
+}
 
 // TODO
-export function useBoolean(init: boolean) {
+export function useBoolean(init: boolean): UseBooleanReturn {
 	const [value, setValue] = React.useState(init);
 	return {
 		value,
@@ -33,3 +37,11 @@ export function useStylesheet() {}
 
 // TODO
 export function useScript() {}
+
+type UseBooleanReturn = {
+	value: boolean;
+	toggle(): void;
+	setValue(value: boolean): void;
+	setTrue(): void;
+	setFalse(): void;
+}

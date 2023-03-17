@@ -10,6 +10,9 @@ sandbox(globalThis, sb => {
 
 	// TODO
 	describe("useAsync()", () => {});
+	
+	// TODO
+	describe("useForce()", () => {});
 
 	describe("usePrevious()", () => {
 		function Component() {

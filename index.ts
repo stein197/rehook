@@ -1,9 +1,14 @@
 import * as React from "react";
 
 // TODO
-export function createGlobal<T>(init: T): <T>() => [global: T, setGlobal: (state: T) => void] {
-	return <T>(): [global: T, setGlobal: (state: T) => void] => {
-
+export function createGlobal<T extends object>(init: T): () => [global: T, setGlobal: (state: Partial<T>) => void] {
+	const ref = {
+		global: init
+	};
+	const reducer = (curState: T, newState: T) => ref.global = {...curState, ...newState}; // TODO: Use deep merge and do not merge non-plain objects
+	return () => {
+		const [state, dispatch] = React.useReducer(reducer, ref.global);
+		return [state, dispatch];
 	}
 }
 

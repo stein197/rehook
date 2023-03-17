@@ -1,14 +1,25 @@
 import * as React from "react";
 
-// TODO
-export function createGlobal<T extends object>(init: T): () => [global: T, setGlobal: (state: Partial<T>) => void] {
-	const ref = {
-		global: init
-	};
-	const reducer = (curState: T, newState: T) => ref.global = {...curState, ...newState}; // TODO: Use deep merge and do not merge non-plain objects
+// TODO: Make no rerenders when deep object is changing. Possibly use callback in useGlobal()
+export function createGlobal<T extends object>(global: T): () => [global: T, setGlobal: (state: Partial<T>) => void] {
+	const dispatchArray = [];
+	function reducer(curState, newState) {
+		return global = {...curState, ...newState}; // TODO: Use deep merge and do not merge non-plain objects
+	}
+	function updateGlobal(state) {
+		for (const dispatch of dispatchArray)
+			dispatch(state);
+	}
 	return () => {
-		const [state, dispatch] = React.useReducer(reducer, ref.global);
-		return [state, dispatch];
+		const [state, dispatch] = React.useReducer(reducer, global);
+		React.useEffect(() => {
+			dispatchArray.push(dispatch);
+			return () => {
+				const dispatchIdx = dispatchArray.indexOf(dispatch);
+				dispatchArray.splice(dispatchIdx, 1);
+			}
+		}, []);
+		return [state, updateGlobal];
 	}
 }
 

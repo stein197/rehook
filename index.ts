@@ -1,4 +1,4 @@
-import React from "react";
+import * as React from "react";
 
 // TODO
 export function createGlobal<T>(init: T): <T>() => [global: T, setGlobal: (state: T) => void] {

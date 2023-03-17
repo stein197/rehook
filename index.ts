@@ -26,6 +26,9 @@ export function createGlobal<T extends object>(global: T): () => [global: T, set
 // TODO
 export function useAsync() {}
 
+// TODO
+export function useForce() {}
+
 /**
  * Save the previous value.
  * @param value Value to save.

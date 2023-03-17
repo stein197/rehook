@@ -49,8 +49,43 @@ sandbox(globalThis, sb => {
 		});
 	});
 
-	// TODO
-	describe("useBoolean()", () => {});
+	describe("useBoolean()", () => {
+		function Component(props: {init: boolean}): JSX.Element {
+			const bool = rehook.useBoolean(props.init);
+			return (
+				<>
+					<p>{bool.value.toString()}</p>
+					<button onClick={bool.toggle} data-value="toggle">toggle</button>
+					<button onClick={bool.setTrue} data-value="setTrue">setTrue</button>
+					<button onClick={bool.setFalse} data-value="setFalse">setFalse</button>
+				</>
+			);
+		}
+		it("Should toggle the value when calling toggle()", async () => {
+			await sb.render(<Component init={true} />);
+			assert.equal(sb.find("p")!.textContent, "true");
+			await sb.find("[data-value=\"toggle\"]")!.click();
+			assert.equal(sb.find("p")!.textContent, "false");
+			await sb.find("[data-value=\"toggle\"]")!.click();
+			assert.equal(sb.find("p")!.textContent, "true");
+		});
+		it("Should always set to true when calling setTrue()", async () => {
+			await sb.render(<Component init={false} />);
+			assert.equal(sb.find("p")!.textContent, "false");
+			await sb.find("[data-value=\"setTrue\"]")!.click();
+			assert.equal(sb.find("p")!.textContent, "true");
+			await sb.find("[data-value=\"setTrue\"]")!.click();
+			assert.equal(sb.find("p")!.textContent, "true");
+		});
+		it("Should always set to false when calling setFalse()", async () => {
+			await sb.render(<Component init={true} />);
+			assert.equal(sb.find("p")!.textContent, "true");
+			await sb.find("[data-value=\"setFalse\"]")!.click();
+			assert.equal(sb.find("p")!.textContent, "false");
+			await sb.find("[data-value=\"setFalse\"]")!.click();
+			assert.equal(sb.find("p")!.textContent, "false");
+		});
+	});
 
 	// TODO
 	describe("useImage()", () => {});

@@ -64,7 +64,26 @@ export function usePrevious<T>(value: T): T {
 	return ref.current;
 }
 
-// TODO
+/**
+ * Creates a boolean that can be toggled.
+ * @param init Initial value.
+ * @returns An object with hooks.
+ * @example
+ * ```tsx
+ * function Component(props: {init: boolean}): React.ReactNode {
+ * 	const bool = useBoolean(props.init);
+ * 	return (
+ * 		<>
+ * 			<p>{bool.value.toString()}</p>
+ * 			<button onClick={bool.toggle}>toggle</button>
+ * 			<button onClick={bool.setValue}>setValue</button>
+ * 			<button onClick={bool.setTrue}>setTrue</button>
+ * 			<button onClick={bool.setFalse}>setFalse</button>
+ * 		</>
+ * 	);
+ * }
+ * ```
+ */
 export function useBoolean(init: boolean): UseBooleanReturn {
 	const [value, setValue] = React.useState(init);
 	return {

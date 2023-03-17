@@ -26,11 +26,26 @@ export function createGlobal<T extends object>(global: T): () => [global: T, set
 // TODO
 export function useAsync() {}
 
-// TODO
-export function useForce() {}
+/**
+ * Forces rerender.
+ * @returns Callback to call in order to rerender a component.
+ * @example
+ * ```tsx
+ * function Component() {
+ * 	const force = useForce();
+ * 	return (
+ * 		<button onClick={force}>Rerender</button>
+ * 	);
+ * }
+ * ```
+ */
+export function useForce(): () => void {
+	const [, dispatch] = React.useReducer(x => x + 1, 0);
+	return dispatch;
+}
 
 /**
- * Save the previous value.
+ * Saves the previous value.
  * @param value Value to save.
  * @returns Previous value.
  * @example

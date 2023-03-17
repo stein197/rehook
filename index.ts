@@ -10,10 +10,23 @@ export function createGlobal<T>(init: T): <T>() => [global: T, setGlobal: (state
 // TODO
 export function useAsync() {}
 
-// TODO
+/**
+ * Save the previous value.
+ * @param value Value to save.
+ * @returns Previous value.
+ * @example
+ * ```tsx
+ * function Component() {
+ * 	const prev = usePrevious(1);
+ * 	return (
+ * 		<p>Previous value is: {prev}</p>
+ * 	);
+ * }
+ * ```
+ */
 export function usePrevious<T>(value: T): T {
 	const ref = React.useRef(value);
-	React.useEffect(() => ref.current = value, [value]);
+	React.useEffect(() => void (ref.current = value), [value]);
 	return ref.current;
 }
 

@@ -1,25 +1,30 @@
 import * as React from "react";
 
-// TODO: Make no rerenders when deep object is changing. Possibly use callback in useGlobal()
-export function createGlobal<T extends object>(global: T): () => [global: T, setGlobal: (state: Partial<T>) => void] {
-	const dispatchArray = [];
-	function reducer(curState, newState) {
-		return global = {...curState, ...newState}; // TODO: Use deep merge and do not merge non-plain objects
+export function createStore<T extends object>(store: T): <K extends keyof T>(key?: K) => [state: T[K], setState: (state: T[K]) => void] {
+	const listeners = {};
+	function update(id: string, state) {
+		const [queryKey] = listeners[id];
+		if (store[queryKey] === state)
+			return;
+		store[queryKey] = state;
+		for (const id in listeners) {
+			const [key, setState, force] = listeners[id];
+			if (queryKey === key) // replace with equal()
+				setState(store[key]);
+			if (!key)
+				force();
+		}
 	}
-	function updateGlobal(state) {
-		for (const dispatch of dispatchArray)
-			dispatch(state);
-	}
-	return () => {
-		const [state, dispatch] = React.useReducer(reducer, global);
-		React.useEffect(() => {
-			dispatchArray.push(dispatch);
-			return () => {
-				const dispatchIdx = dispatchArray.indexOf(dispatch);
-				dispatchArray.splice(dispatchIdx, 1);
-			}
-		}, []);
-		return [state, updateGlobal];
+	return <K extends keyof T>(key?: K) => {
+		const [state, setState] = React.useState(key ? store[key] : store);
+		const id = React.useId();
+		const force = useForce();
+		const dispatch = React.useCallback<(state: T[K]) => void>(state => update(id, state), [id]);
+		React.useEffect((): () => void => {
+			listeners[id] = [key, setState, force];
+			return () => delete listeners[id];
+		}, [id]);
+		return [state, dispatch] as [state: T[K], setState: (state: T[K]) => void];
 	}
 }
 
@@ -40,7 +45,7 @@ export function useAsync() {}
  * ```
  */
 export function useForce(): () => void {
-	const [, dispatch] = React.useReducer(x => x + 1, 0);
+	const [, dispatch] = React.useReducer(x => !x, false);
 	return dispatch;
 }
 

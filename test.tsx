@@ -8,7 +8,7 @@ const setTimeout = globalThis.setTimeout;
 
 sandbox(globalThis, sb => {
 	// TODO
-	describe("createGlobal()", () => {});
+	describe("createStore()", () => {});
 
 	// TODO
 	describe("useAsync()", () => {});

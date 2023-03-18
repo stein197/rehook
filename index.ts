@@ -95,75 +95,88 @@ export function useBoolean(init: boolean): UseBooleanReturn {
 	};
 }
 
-// TODO
-export function useImage(url: string): UseImageReturn {
-	const [loaded, setLoaded] = React.useState(false);
-	const [error, setError] = React.useState(null);
-	React.useEffect(() => {
-		const img = new Image();
-		img.onerror = e => {
-			setLoaded(false);
-			setError(e);
-		}
-		img.onload = () => {
-			setLoaded(true);
-			setError(null);
-		}
-		img.src = url;
-		return () => {
-			setLoaded(false);
-			setError(null);
-		}
-	}, [url]);
-	return [loaded, error];
+/**
+ * Loads an image.
+ * @param url Image URL.
+ * @returns Loaded flag and error object.
+ * @example
+ * ```tsx
+ * function Component(): JSX.Element {
+ * 	const [loaded, error] = useImage("https://domain.com/image.png");
+ * 	return (
+ * 		loaded ? <div>Loaded</div> : <div>Loading...</div>
+ * 	);
+ * }
+ * ```
+ */
+export function useImage(url: string): UseResourceReturn {
+	return useResource("img", url);
 }
 
-// TODO
-export function useStylesheet(url: string): UseStylesheetReturn {
-	const [loaded, setLoaded] = React.useState(false);
-	const [error, setError] = React.useState(null);
-	React.useEffect(() => {
-		const linkElement = document.createElement("link");
-		linkElement.onerror = e => {
-			setLoaded(false);
-			setError(e);
-		}
-		linkElement.onload = () => {
-			setLoaded(true);
-			setError(null);
-		}
-		linkElement.rel = "stylesheet";
-		linkElement.href = url;
-		document.head.appendChild(linkElement);
-		return () => {
-			setLoaded(false);
-			setError(null);
-			linkElement.remove();
-		}
-	}, [url]);
-	return [loaded, error];
+/**
+ * Loads a stylesheet.
+ * @param url Stylesheet URL.
+ * @returns Loaded flag and error object.
+ * @example
+ * ```tsx
+ * function Component(): JSX.Element {
+ * 	const [loaded, error] = useStylesheet("https://domain.com/index.css");
+ * 	return (
+ * 		loaded ? <div>Loaded</div> : <div>Loading...</div>
+ * 	);
+ * }
+ * ```
+ */
+export function useStylesheet(url: string): UseResourceReturn {
+	return useResource("link", url);
 }
 
-// TODO
-export function useScript(url: string): UseScriptReturn {
+/**
+ * Loads a script.
+ * @param url Script URL.
+ * @returns Loaded flag and error object.
+ * @example
+ * ```tsx
+ * function Component(): JSX.Element {
+ * 	const [loaded, error] = useScript("https://domain.com/index.js");
+ * 	return (
+ * 		loaded ? <div>Loaded</div> : <div>Loading...</div>
+ * 	);
+ * }
+ * ```
+ */
+export function useScript(url: string): UseResourceReturn {
+	return useResource("script", url);
+}
+
+function useResource(type: "img" | "link" | "script", url: string): UseResourceReturn {
 	const [loaded, setLoaded] = React.useState(false);
 	const [error, setError] = React.useState(null);
 	React.useEffect(() => {
-		const scriptElement = document.createElement("script");
-		scriptElement.onerror = e => {
+		const element = document.createElement(type);
+		element.onerror = e => {
 			setLoaded(false);
 			setError(e);
 		}
-		scriptElement.onload = () => {
+		element.onload = () => {
 			setLoaded(true);
 			setError(null);
 		}
-		scriptElement.src = url;
-		document.head.appendChild(scriptElement);
+		if (type === "link") {
+			// @ts-ignore
+			element.href = url;
+			// @ts-ignore
+			element.rel = "stylesheet"
+		} else {
+			// @ts-ignore
+			element.src = url;
+		}
+		if (type !== "img")
+			document.head.appendChild(element);
 		return () => {
 			setLoaded(false);
 			setError(null);
-			scriptElement.remove();
+			element.remove();
 		}
 	}, [url]);
 	return [loaded, error];
@@ -177,8 +190,4 @@ type UseBooleanReturn = {
 	setFalse(): void;
 }
 
-type UseImageReturn = [loaded: boolean, error: any];
-
-type UseStylesheetReturn = [loaded: boolean, error: any];
-
-type UseScriptReturn = [loaded: boolean, error: any];
+type UseResourceReturn = [loaded: boolean, error: any];

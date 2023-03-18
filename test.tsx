@@ -4,6 +4,8 @@ import * as React from "react";
 import * as sandbox from "@stein197/mocha-sandbox";
 import * as rehook from ".";
 
+const setTimeout = globalThis.setTimeout;
+
 sandbox(globalThis, sb => {
 	// TODO
 	describe("createGlobal()", () => {});
@@ -86,13 +88,5 @@ sandbox(globalThis, sb => {
 			assert.equal(sb.find("p")!.textContent, "false");
 		});
 	});
-
-	// TODO
-	describe("useImage()", () => {});
-
-	// TODO
-	describe("useStylesheet()", () => {});
-
-	// TODO
-	describe("useScript()", () => {});
 });
+const timeout = ms =>  new Promise(rs => setTimeout(rs,ms))

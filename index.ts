@@ -32,7 +32,7 @@ import * as React from "react";
  * }
  * ```
  */
-export function createStore<T extends object>(store: T): <K extends keyof T>(key?: K) => [state: T[K], setState: (state: T[K]) => void] {
+export function createStore<T extends object>(store: T): UseStore<T> {
 	const listeners = {};
 	function update(id: string, state: any) {
 		const [queryKey] = listeners[id];
@@ -47,17 +47,17 @@ export function createStore<T extends object>(store: T): <K extends keyof T>(key
 				force();
 		}
 	}
-	return <K extends keyof T>(key?: K) => {
+	return ((key?: string) => {
 		const [state, setState] = React.useState(key ? store[key] : store);
 		const id = React.useId();
 		const force = useForce();
-		const dispatch = React.useCallback<(state: T[K]) => void>(state => update(id, state), [id]);
+		const dispatch = React.useCallback(state => update(id, state), [id]);
 		React.useEffect((): () => void => {
 			listeners[id] = [key, setState, force];
 			return () => delete listeners[id];
 		}, [id]);
-		return [state, dispatch] as [state: T[K], setState: (state: T[K]) => void];
-	}
+		return [state, dispatch];
+	}) as UseStore<T>;
 }
 
 // TODO
@@ -217,6 +217,11 @@ function useResource(type: "img" | "link" | "script", url: string): UseResourceR
 		}
 	}, [url]);
 	return [loaded, error];
+}
+
+interface UseStore<T extends object> {
+	<K extends keyof T>(key: K): [store: T[K], setStore: (store: T[K]) => void];
+	(): [store: T, setStore: (store: T) => void];
 }
 
 type UseBooleanReturn = {

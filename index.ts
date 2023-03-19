@@ -52,11 +52,11 @@ export function createStore<T extends object>(store: T): UseStore<T> {
 		const [state, setState] = React.useState(key ? store[key] : store);
 		const id = React.useId();
 		const force = useForce();
-		const dispatch = React.useCallback(state => update(id, state), [id]);
+		const dispatch = React.useCallback(state => update(id, state), [id, key]);
 		React.useEffect((): () => void => {
 			listeners[id] = [key, setState, force];
 			return () => delete listeners[id];
-		}, [id]);
+		}, [id, key]);
 		return [state, dispatch];
 	}) as UseStore<T>;
 }

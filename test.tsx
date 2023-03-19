@@ -146,7 +146,21 @@ sandbox(globalThis, sb => {
 		it.skip("Should rerender component with global store when a single property changes elsewhere", () => {});
 		it.skip("Should rerender component with global store when multiple properties change elsewhere", () => {});
 		it.skip("Should correcly set store value when updating the whole store", () => {});
-		it.skip("Should correcly update values when a callback is passed to setState()", () => {}); // TODO
+		it("Should correcly update values when a callback is passed to setState()", async () => {
+			function Component() {
+				const [num, setNum] = useStore("num");
+				return (
+					<>
+						<p>{num}</p>
+						<button onClick={() => setNum(x => x * 2)} />
+					</>
+				)
+			}
+			await sb.render(<Component />);
+			assert.equal(sb.find("p")!.textContent, "12");
+			await sb.find("button")!.click();
+			assert.equal(sb.find("p")!.textContent, "24");
+		});
 		it.skip("Complex behavior", () => {});
 	});
 

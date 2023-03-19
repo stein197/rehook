@@ -1,8 +1,40 @@
 import * as React from "react";
 
+/**
+ * Simple store implementation. Does not make unnecessary rerenders.
+ * @param store Initial state of the store.
+ * @returns `useStore()` function.
+ * @example
+ * ```tsx
+ * const useStore = createStore({
+ * 	num: 0,
+ * 	str: ""
+ * });
+ * 
+ * function ComponentNum() {
+ * 	const [num, setNum] = useStore("num");
+ * 	return (
+ * 		<>
+ * 			<p>{num}</p>
+ * 			<button onClick={() => setNum(num + 1)}>Increment</button>
+ * 		</>
+ * 	);
+ * }
+ * 
+ * function ComponentStr() {
+ * 	const [str, setStr] = useStore("str");
+ * 	return (
+ * 		<>
+ * 			<p>{str}</p>
+ * 			<button onClick={() => setStr(str + "A")}>Append A</button>
+ * 		</>
+ * 	);
+ * }
+ * ```
+ */
 export function createStore<T extends object>(store: T): <K extends keyof T>(key?: K) => [state: T[K], setState: (state: T[K]) => void] {
 	const listeners = {};
-	function update(id: string, state) {
+	function update(id: string, state: any) {
 		const [queryKey] = listeners[id];
 		if (store[queryKey] === state)
 			return;
@@ -45,7 +77,7 @@ export function useAsync() {}
  * ```
  */
 export function useForce(): () => void {
-	const [, dispatch] = React.useReducer(x => !x, false);
+	const [, dispatch] = React.useReducer(x => ++x, 0);
 	return dispatch;
 }
 

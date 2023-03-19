@@ -26,7 +26,7 @@ import * as React from "react";
  * 	return (
  * 		<>
  * 			<p>{str}</p>
- * 			<button onClick={() => setStr(str + "A")}>Append A</button>
+ * 			<button onClick={() => setStr(prevStr => prevStr + "A")}>Append A</button>
  * 		</>
  * 	);
  * }
@@ -36,9 +36,10 @@ export function createStore<T extends object>(store: T): UseStore<T> {
 	const listeners = {};
 	function update(id: string, state: any) {
 		const [queryKey] = listeners[id];
-		if (store[queryKey] === state)
+		const newState = state instanceof Function ? state(store[queryKey]) : state;
+		if (store[queryKey] === newState)
 			return;
-		store[queryKey] = state;
+		store[queryKey] = newState;
 		for (const id in listeners) {
 			const [key, setState, force] = listeners[id];
 			if (queryKey === key) // replace with equal()
@@ -220,7 +221,7 @@ function useResource(type: "img" | "link" | "script", url: string): UseResourceR
 }
 
 interface UseStore<T extends object> {
-	<K extends keyof T>(key: K): [store: T[K], setStore: (store: T[K]) => void];
+	<K extends keyof T>(key: K): [store: T[K], setStore: (store: T[K] | ((prev: T[K]) => T[K])) => void];
 	(): [store: T, setStore: (store: T) => void];
 }
 

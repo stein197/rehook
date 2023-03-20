@@ -39,10 +39,13 @@ export function createStore<T extends object>(store: T): UseStore<T> {
 		const newState = state instanceof Function ? state(store[queryKey]) : state;
 		if (store[queryKey] === newState)
 			return;
-		store[queryKey] = newState;
+		if (!queryKey)
+			store = state;
+		else
+			store[queryKey] = newState;
 		for (const id in listeners) {
 			const [key, setState, force] = listeners[id];
-			if (queryKey === key) // replace with equal()
+			if (queryKey === key || !queryKey)
 				setState(store[key]);
 			if (!key)
 				force();

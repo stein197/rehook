@@ -21,9 +21,9 @@ sandbox(globalThis, sb => {
 			const [store, setStore] = useStore();
 			return (
 				<>
-					<p className="store">{JSON.stringify(store)}</p>
-					<p className="num">{store.num}</p>
-					<p className="str">{store.str}</p>
+					<p className="store-val">{JSON.stringify(store)}</p>
+					<p className="num-val">{store.num}</p>
+					<p className="str-val">{store.str}</p>
 				</>
 			);
 		}
@@ -47,8 +47,8 @@ sandbox(globalThis, sb => {
 		}
 		it("Should return correct state when using useStore() with a key", async () => {
 			await sb.render(<ComponentStore />);
-			assert.equal(sb.find(".num")!.textContent, "12");
-			assert.equal(sb.find(".str")!.textContent, "string");
+			assert.equal(sb.find(".num-val")!.textContent, "12");
+			assert.equal(sb.find(".str-val")!.textContent, "string");
 			await sb.find(".num-button")!.click();
 			await sb.find(".str-button")!.click();
 			assert.equal(sb.find(".num p")!.textContent, "24");
@@ -56,7 +56,7 @@ sandbox(globalThis, sb => {
 		});
 		it("Should return correct state when using useStore() without a key", async () => {
 			await sb.render(<ComponentStore />);
-			assert.equal(sb.find(".store")!.textContent, "{\"num\":12,\"str\":\"string\"}");
+			assert.equal(sb.find(".store-val")!.textContent, "{\"num\":12,\"str\":\"string\"}");
 		});
 		it("Should always return the same reference to setValue()", async () => {
 			let ref;
@@ -141,9 +141,21 @@ sandbox(globalThis, sb => {
 			await sb.find("button")!.click();
 			tracker1.verify();
 			tracker2.verify();
-			assert.equal(sb.find(".store")!.textContent, "{\"num\":24,\"str\":\"stringstring\"}");
+			assert.equal(sb.find(".store-val")!.textContent, "{\"num\":24,\"str\":\"stringstring\"}");
 		});
-		it.skip("Should rerender component with global store when a single property changes elsewhere", () => {});
+		it("Should rerender component with global store when a single property changes elsewhere", async () => {
+			const tracker = new assert.CallTracker();
+			const TrackedStore = tracker.calls(ComponentStore, 2);
+			await sb.render(
+				<>
+					<ComponentNum />
+					<TrackedStore />
+				</>
+			);
+			await sb.find(".num button")!.click();
+			tracker.verify();
+			assert.equal(sb.find(".store-val")!.textContent, "{\"num\":24,\"str\":\"string\"}");
+		});
 		it.skip("Should rerender component with global store when multiple properties change elsewhere", () => {});
 		it.skip("Should correcly set store value when updating the whole store", () => {});
 		it("Should correcly update values when a callback is passed to setState()", async () => {

@@ -1,69 +1,5 @@
 import * as React from "react";
 
-/**
- * Simple store implementation. Does not make unnecessary rerenders.
- * @param store Initial state of the store.
- * @returns `useStore()` function.
- * @example
- * ```tsx
- * const useStore = createStore({
- * 	num: 0,
- * 	str: ""
- * });
- * 
- * function ComponentNum() {
- * 	const [num, setNum] = useStore("num");
- * 	return (
- * 		<>
- * 			<p>{num}</p>
- * 			<button onClick={() => setNum(num + 1)}>Increment</button>
- * 		</>
- * 	);
- * }
- * 
- * function ComponentStr() {
- * 	const [str, setStr] = useStore("str");
- * 	return (
- * 		<>
- * 			<p>{str}</p>
- * 			<button onClick={() => setStr(prevStr => prevStr + "A")}>Append A</button>
- * 		</>
- * 	);
- * }
- * ```
- */
-export function createStore<T extends object>(store: T): UseStore<T> {
-	const listeners = {};
-	function update(id: string, state: any) {
-		const [queryKey] = listeners[id];
-		const newState = state instanceof Function ? state(store[queryKey]) : state;
-		if (store[queryKey] === newState)
-			return;
-		if (!queryKey)
-			store = state;
-		else
-			store[queryKey] = newState;
-		for (const id in listeners) {
-			const [key, setState, force] = listeners[id];
-			if (queryKey === key || !queryKey)
-				setState(store[key]);
-			if (!key)
-				force();
-		}
-	}
-	return ((key?: string) => {
-		const [state, setState] = React.useState(key ? store[key] : store);
-		const id = React.useId();
-		const force = useForce();
-		const dispatch = React.useCallback(state => update(id, state), [id, key]);
-		React.useEffect((): () => void => {
-			listeners[id] = [key, setState, force];
-			return () => delete listeners[id];
-		}, [id, key]);
-		return [state, dispatch];
-	}) as UseStore<T>;
-}
-
 // TODO
 export function useAsync() {}
 
@@ -221,11 +157,6 @@ function useResource(type: "img" | "link" | "script", url: string): UseResourceR
 		}
 	}, [url]);
 	return [loaded, error];
-}
-
-interface UseStore<T extends object> {
-	<K extends keyof T>(key: K): [store: T[K], setStore: (store: T[K] | ((prev: T[K]) => T[K])) => void];
-	(): [store: T, setStore: (store: T) => void];
 }
 
 type UseBooleanReturn = {

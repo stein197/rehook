@@ -1,7 +1,50 @@
 import * as React from "react";
 
-// TODO
-export function useAsync() {}
+
+export function useAsync<T, U>(promise: Promise<T>): UsePromise<T, U, false>;
+
+export function useAsync<T, U>(cb: () => Promise<T>): UsePromise<T, U, true>;
+
+export function useAsync<T, U>(a: Promise<T> | (() => Promise<T>)): UsePromise<T, U, boolean> {
+	const [state, setState] = React.useState<PromiseState>("pending");
+	const [value, setValue] = React.useState<T>();
+	const [error, setError] = React.useState<U>();
+	const isPromise = a instanceof Promise;
+	const run = React.useCallback(() => {
+		if (isPromise)
+			return;
+		a().then(value => {
+			setState("fulfilled");
+			setValue(value);
+			setError(undefined);
+		}).catch(error => {
+			setState("rejected");
+			setValue(undefined);
+			setError(error);
+		});
+	}, [a]);
+	React.useEffect(() => {
+		if (!isPromise)
+			return;
+		a.then(value => {
+			setState("fulfilled");
+			setValue(value);
+			setError(undefined);
+		}).catch(error => {
+			setState("rejected");
+			setValue(undefined);
+			setError(error);
+		});
+	}, [a]);
+	React.useEffect(() => {
+		return () => {
+			setState("pending");
+			setValue(undefined);
+			setError(undefined);
+		}
+	}, [a]);
+	return [state, value, error, run];
+}
 
 /**
  * Forces rerender.
@@ -159,6 +202,8 @@ function useResource(type: "img" | "link" | "script", url: string): UseResourceR
 	return [loaded, error];
 }
 
+type UsePromise<T, U, V extends boolean> = [state: PromiseState, value: T | undefined, error: U | undefined, run: V extends true ? (() => void) : never];
+
 type UseBooleanReturn = {
 	value: boolean;
 	toggle(): void;
@@ -168,3 +213,5 @@ type UseBooleanReturn = {
 }
 
 type UseResourceReturn = [loaded: boolean, error: any];
+
+type PromiseState = "pending" | "fulfilled" | "rejected";

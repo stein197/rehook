@@ -1,8 +1,44 @@
 import * as React from "react";
 
-
+/**
+ * Awaits for the promise to resolve.
+ * @param promise Promise to resolve.
+ * @returns State, value and error of the promise.
+ * @example
+ * ```tsx
+ * function Component() {
+ * 	const [state, value, error] = usePromise(new Promise((resolve, reject) => setTimeout(() => Math.random() > .5 ? resolve() : reject(), 1000)));
+ * 	return (
+ * 		<>
+ * 			{state == "pending" && <p>Loading...</p>}
+ * 			{state == "fulfilled" && value != null && <p>Value: {value}</p>}
+ * 			{state == "rejected" && error != null && <p>Error: {error}</p>}
+ * 		</>
+ * 	);
+ * }
+ * ```
+ */
 export function useAsync<T, U>(promise: Promise<T>): UsePromise<T, U, false>;
 
+/**
+ * Awaits for the promise to resolve.
+ * @param cb Callback that must return a promise.
+ * @returns State, value, error of the promise and a function to run promise.
+ * @example
+ * ```tsx
+ * function Component() {
+ * 	const [state, value, error, run] = usePromise(() => new Promise((resolve, reject) => setTimeout(() => Math.random() > .5 ? resolve() : reject(), 1000)));
+ * 	return (
+ * 		<>
+ * 			{state == "pending" && <p>Loading...</p>}
+ * 			{state == "fulfilled" && value != null && <p>Value: {value}</p>}
+ * 			{state == "rejected" && error != null && <p>Error: {error}</p>}
+ * 			<button onClick={run}>Run promise</button>
+ * 		</>
+ * 	);
+ * }
+ * ```
+ */
 export function useAsync<T, U>(cb: () => Promise<T>): UsePromise<T, U, true>;
 
 export function useAsync<T, U>(a: Promise<T> | (() => Promise<T>)): UsePromise<T, U, boolean> {

@@ -7,8 +7,22 @@ import * as rehook from ".";
 const setTimeout = globalThis.setTimeout;
 
 sandbox(globalThis, sb => {
-	// TODO
-	describe("useAsync()", () => {});
+	describe("useAsync()", () => {
+		describe("useAsync(promise)", () => {
+			it.skip("Should return pending state and undefined as result and error right after initialization", () => {});
+			it.skip("Should return fulfilled state, an expected result and undefined as an error when the promise is resolved", () => {});
+			it.skip("Should return rejected state, undefined as a result and an error when the promise is rejected", () => {});
+			it.skip("Should reset state when a new promise is passed", () => {});
+		});
+
+		describe("useAsync(() => promise)", () => {
+			it.skip("Should not run promise function when the runner is not called", () => {});
+			it.skip("Should return pending state and undefined as result and error right after initialization", () => {});
+			it.skip("Should return fulfilled state, an expected result and undefined as an error when the callback is fired and the promise is resolved", () => {});
+			it.skip("Should return rejected state, undefined as a result and an error when the callback is fired and the promise is resolved", () => {});
+			it.skip("Should reset state when a new callback is passed", () => {});
+		});
+	});
 	
 	describe("useForce()", () => {
 		function Component() {

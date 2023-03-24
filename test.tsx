@@ -8,6 +8,18 @@ const setTimeout = globalThis.setTimeout;
 
 sandbox(globalThis, sb => {
 	describe("useAsync()", () => {
+		function Component(props: {promise: Promise<any> | (() => Promise<any>)}): JSX.Element {
+			// @ts-ignore
+			const [state, value, error, run] = rehook.useAsync(props.promise);
+			return (
+				<>
+					<p className="state">{state}</p>
+					<p className="value">{value}</p>
+					<p className="error">{error as any}</p>
+					<button onClick={run} />
+				</>
+			);
+		}
 		describe("useAsync(promise)", () => {
 			it.skip("Should return pending state and undefined as result and error right after initialization", () => {});
 			it.skip("Should return fulfilled state, an expected result and undefined as an error when the promise is resolved", () => {});
@@ -100,4 +112,14 @@ sandbox(globalThis, sb => {
 		});
 	});
 });
-const timeout = ms =>  new Promise(rs => setTimeout(rs,ms))
+
+function timeout<T>(ms: number, state: "fulfilled" | "rejected", resolvedValue: T, rejectedValue?: any): Promise<T> {
+	return new Promise((resolve, reject) => {
+		setTimeout(() => {
+			if (state === "fulfilled")
+				resolve(resolvedValue);
+			else
+				reject(rejectedValue);
+		}, ms);
+	});
+}

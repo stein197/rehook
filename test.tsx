@@ -3,8 +3,9 @@ import * as assert from "node:assert";
 import * as React from "react";
 import * as sandbox from "@stein197/mocha-sandbox";
 import * as rehook from ".";
+const ReactDOMTestUtils = require("react-dom/test-utils");
 
-const setTimeout = globalThis.setTimeout;
+const setTimeoutOriginal = globalThis.setTimeout;
 
 sandbox(globalThis, sb => {
 	describe("useAsync()", () => {
@@ -13,26 +14,74 @@ sandbox(globalThis, sb => {
 			const [state, value, error, run] = rehook.useAsync(props.promise);
 			return (
 				<>
-					<p className="state">{state}</p>
-					<p className="value">{value}</p>
-					<p className="error">{error as any}</p>
+					<p className="state">{String(state)}</p>
+					<p className="value">{String(value)}</p>
+					<p className="error">{String(error)}</p>
 					<button onClick={run} />
 				</>
 			);
 		}
 		describe("useAsync(promise)", () => {
-			it.skip("Should return pending state and undefined as result and error right after initialization", () => {});
-			it.skip("Should return fulfilled state, an expected result and undefined as an error when the promise is resolved", () => {});
-			it.skip("Should return rejected state, undefined as a result and an error when the promise is rejected", () => {});
-			it.skip("Should reset state when a new promise is passed", () => {});
+			it("Should return pending state and undefined as result and error right after initialization", async () => {
+				const promise = timeout(100, "fulfilled", "result", "error");
+				await sb.render(<Component promise={promise} />);
+				assert.equal(sb.find(".state")!.textContent, "pending");
+				assert.equal(sb.find(".value")!.textContent, "undefined");
+				assert.equal(sb.find(".error")!.textContent, "undefined");
+			});
+			it("Should return fulfilled state, an expected result and undefined as an error when the promise is resolved", async () => {
+				const promise = timeout(100, "fulfilled", "result", "error");
+				await sb.renderAsync(<Component promise={promise} />, promise);
+				assert.equal(sb.find(".state")!.textContent, "fulfilled");
+				assert.equal(sb.find(".value")!.textContent, "result");
+				assert.equal(sb.find(".error")!.textContent, "undefined");
+			});
+			it("Should return rejected state, undefined as a result and an error when the promise is rejected", async () => {
+				const promise = timeout(100, "rejected", "result", "error");
+				await sb.renderAsync(<Component promise={promise} />, promise);
+				assert.equal(sb.find(".state")!.textContent, "rejected");
+				assert.equal(sb.find(".value")!.textContent, "undefined");
+				assert.equal(sb.find(".error")!.textContent, "error");
+			});
+			it.skip("Should reset state when a new promise is passed", async () => {});
 		});
 
 		describe("useAsync(() => promise)", () => {
-			it.skip("Should not run promise function when the runner is not called", () => {});
-			it.skip("Should return pending state and undefined as result and error right after initialization", () => {});
-			it.skip("Should return fulfilled state, an expected result and undefined as an error when the callback is fired and the promise is resolved", () => {});
-			it.skip("Should return rejected state, undefined as a result and an error when the callback is fired and the promise is resolved", () => {});
-			it.skip("Should reset state when a new callback is passed", () => {});
+			it("Should not run promise function when the runner is not called", async () => {
+				const promise = timeout(100);
+				await sb.render(<Component promise={() => promise} />);
+				await timeout(200);
+				assert.equal(sb.find(".state")!.textContent, "pending");
+				assert.equal(sb.find(".value")!.textContent, "undefined");
+				assert.equal(sb.find(".error")!.textContent, "undefined");
+			});
+			it("Should return pending state and undefined as result and error right after initialization", async () => {
+				const promise = timeout(100);
+				await sb.render(<Component promise={() => promise} />);
+				await sb.find("button")!.click();
+				assert.equal(sb.find(".state")!.textContent, "pending");
+				assert.equal(sb.find(".value")!.textContent, "undefined");
+				assert.equal(sb.find(".error")!.textContent, "undefined");
+			});
+			it("Should return fulfilled state, an expected result and undefined as an error when the callback is fired and the promise is resolved", async () => {
+				const promise = timeout(100, "fulfilled", "result", "error");
+				await sb.render(<Component promise={() => promise} />);
+				await sb.find("button")!.click();
+				await timeout(100);
+				assert.equal(sb.find(".state")!.textContent, "fulfilled");
+				assert.equal(sb.find(".value")!.textContent, "result");
+				assert.equal(sb.find(".error")!.textContent, "undefined");
+			});
+			it("Should return rejected state, undefined as a result and an error when the callback is fired and the promise is resolved", async () => {
+				const promise = timeout(100, "rejected", "result", "error");
+				await sb.render(<Component promise={() => promise} />);
+				await sb.find("button")!.click();
+				await timeout(200);
+				assert.equal(sb.find(".state")!.textContent, "rejected");
+				assert.equal(sb.find(".value")!.textContent, "undefined");
+				assert.equal(sb.find(".error")!.textContent, "error");
+			});
+			it.skip("Should reset state when a new callback is passed", async () => {});
 		});
 	});
 	
@@ -113,9 +162,9 @@ sandbox(globalThis, sb => {
 	});
 });
 
-function timeout<T>(ms: number, state: "fulfilled" | "rejected", resolvedValue: T, rejectedValue?: any): Promise<T> {
+function timeout<T>(ms: number, state: "fulfilled" | "rejected" = "fulfilled", resolvedValue?: T, rejectedValue?: any): Promise<T | undefined> {
 	return new Promise((resolve, reject) => {
-		setTimeout(() => {
+		setTimeoutOriginal(() => {
 			if (state === "fulfilled")
 				resolve(resolvedValue);
 			else

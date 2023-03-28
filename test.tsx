@@ -65,18 +65,20 @@ sandbox(globalThis, sb => {
 			});
 			it("Should return fulfilled state, an expected result and undefined as an error when the callback is fired and the promise is resolved", async () => {
 				const promise = timeout(100, "fulfilled", "result", "error");
-				await sb.render(<Component promise={() => promise} />);
-				await sb.find("button")!.click();
-				await timeout(100);
+				await sb.react(<Component promise={() => promise} />, async () => {
+					await sb.find("button")!.click();
+					await timeout(100);
+				});
 				assert.equal(sb.find(".state")!.textContent, "fulfilled");
 				assert.equal(sb.find(".value")!.textContent, "result");
 				assert.equal(sb.find(".error")!.textContent, "undefined");
 			});
 			it("Should return rejected state, undefined as a result and an error when the callback is fired and the promise is resolved", async () => {
 				const promise = timeout(100, "rejected", "result", "error");
-				await sb.render(<Component promise={() => promise} />);
-				await sb.find("button")!.click();
-				await timeout(200);
+				await sb.react(<Component promise={() => promise} />, async () => {
+					await sb.find("button")!.click();
+					await timeout(200);
+				});
 				assert.equal(sb.find(".state")!.textContent, "rejected");
 				assert.equal(sb.find(".value")!.textContent, "undefined");
 				assert.equal(sb.find(".error")!.textContent, "error");

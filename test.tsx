@@ -3,6 +3,8 @@ import * as sandbox from "@stein197/test-sandbox";
 import * as rehook from ".";
 
 const setTimeoutOriginal = globalThis.setTimeout;
+const TIMEOUT_PROMISE = 10;
+const TIMEOUT_PROMISE_RESOLVE = TIMEOUT_PROMISE + 5;
 
 sandbox(globalThis, sb => {
 	describe("useAsync()", () => {
@@ -20,14 +22,14 @@ sandbox(globalThis, sb => {
 		}
 		describe("useAsync(promise)", () => {
 			it("Should return pending state and undefined as result and error right after initialization", () => sb
-				.render(<Component promise={timeout(100)} />)
+				.render(<Component promise={timeout(TIMEOUT_PROMISE)} />)
 				.equals(sb => sb.find(".state")!.textContent, "pending")
 				.equals(sb => sb.find(".value")!.textContent, "undefined")
 				.equals(sb => sb.find(".error")!.textContent, "undefined")
 				.run()
 			);
 			it("Should return fulfilled state, an expected result and undefined as an error when the promise is resolved", () => {
-				const promise = timeout(100, "fulfilled", "result", "error");
+				const promise = timeout(TIMEOUT_PROMISE, "fulfilled", "result", "error");
 				return sb
 					.render(<Component promise={promise} />)
 					.await(promise)
@@ -37,7 +39,7 @@ sandbox(globalThis, sb => {
 					.run()
 			});
 			it("Should return rejected state, undefined as a result and an error when the promise is rejected", () => {
-				const promise = timeout(100, "rejected", "result", "error");
+				const promise = timeout(TIMEOUT_PROMISE, "rejected", "result", "error");
 				return sb
 					.render(<Component promise={promise} />)
 					.await(promise)
@@ -48,17 +50,17 @@ sandbox(globalThis, sb => {
 			});
 			it("Should reset state when a new promise is passed", () => {
 				function Component1(): JSX.Element {
-					const [promise, setPromise] = React.useState(timeout(100, "fulfilled", "result", "error"));
+					const [promise, setPromise] = React.useState(timeout(TIMEOUT_PROMISE, "fulfilled", "result", "error"));
 					return (
 						<>
 							<Component promise={promise} />
-							<button onClick={() => setPromise(timeout(100, "fulfilled", "result", "error"))}>Update</button>
+							<button onClick={() => setPromise(timeout(TIMEOUT_PROMISE, "fulfilled", "result", "error"))}>Update</button>
 						</>
 					);
 				}
 				return sb
 					.render(<Component1 />)
-					.timeout(150)
+					.timeout(TIMEOUT_PROMISE_RESOLVE)
 					.equals(sb => sb.find(".state")!.textContent, "fulfilled")
 					.equals(sb => sb.find(".value")!.textContent, "result")
 					.equals(sb => sb.find(".error")!.textContent, "undefined")
@@ -72,15 +74,15 @@ sandbox(globalThis, sb => {
 
 		describe("useAsync(() => promise)", () => {
 			it("Should not run promise function when the runner is not called", () => sb
-				.render(<Component promise={() => timeout(100)} />)
-				.timeout(150)
+				.render(<Component promise={() => timeout(TIMEOUT_PROMISE)} />)
+				.timeout(TIMEOUT_PROMISE_RESOLVE)
 				.equals(sb => sb.find(".state")!.textContent, "pending")
 				.equals(sb => sb.find(".value")!.textContent, "undefined")
 				.equals(sb => sb.find(".error")!.textContent, "undefined")
 				.run()
 			);
 			it("Should return pending state and undefined as result and error right after initialization", () => sb
-				.render(<Component promise={() => timeout(100)} />)
+				.render(<Component promise={() => timeout(TIMEOUT_PROMISE)} />)
 				.simulate(sb => sb.find("button")!, "click")
 				.equals(sb => sb.find(".state")!.textContent, "pending")
 				.equals(sb => sb.find(".value")!.textContent, "undefined")
@@ -88,7 +90,7 @@ sandbox(globalThis, sb => {
 				.run()
 			);
 			it("Should return fulfilled state, an expected result and undefined as an error when the callback is fired and the promise is resolved", () => {
-				const promise = timeout(100, "fulfilled", "result", "error");
+				const promise = timeout(TIMEOUT_PROMISE, "fulfilled", "result", "error");
 				return sb
 					.render(<Component promise={() => promise} />)
 					.simulate(sb => sb.find("button")!, "click")
@@ -99,7 +101,7 @@ sandbox(globalThis, sb => {
 					.run();
 			});
 			it("Should return rejected state, undefined as a result and an error when the callback is fired and the promise is resolved", () => {
-				const promise = timeout(100, "rejected", "result", "error");
+				const promise = timeout(TIMEOUT_PROMISE, "rejected", "result", "error");
 				return sb
 					.render(<Component promise={() => promise} />)
 					.simulate(sb => sb.find("button")!, "click")
@@ -111,18 +113,18 @@ sandbox(globalThis, sb => {
 			});
 			it("Should reset state when a new callback is passed", () => {
 				function Component1(): JSX.Element {
-					const [promise, setPromise] = React.useState<any>(() => timeout(100, "fulfilled", "result", "error"));
+					const [promise, setPromise] = React.useState<any>(() => timeout(TIMEOUT_PROMISE, "fulfilled", "result", "error"));
 					return (
 						<>
 							<Component promise={promise} />
-							<button onClick={() => setPromise(() => () => timeout(100, "fulfilled", "result", "error"))}>Update</button>
+							<button onClick={() => setPromise(() => () => timeout(TIMEOUT_PROMISE, "fulfilled", "result", "error"))}>Update</button>
 						</>
 					);
 				}
 				return sb
 					.render(<Component1 />)
 					.simulate(sb => sb.findByText("Run")!, "click")
-					.timeout(150)
+					.timeout(TIMEOUT_PROMISE_RESOLVE)
 					.equals(sb => sb.find(".state")!.textContent, "fulfilled")
 					.equals(sb => sb.find(".value")!.textContent, "result")
 					.equals(sb => sb.find(".error")!.textContent, "undefined")

@@ -21,9 +21,9 @@ import * as React from "react";
 export function useAsync<T, U>(promise: Promise<T>): UsePromise<T, U, false>;
 
 /**
- * Awaits for the promise to resolve.
+ * Gets a function that must return a promise and calls it on demand, which starts the process of resolving the promise.
  * @param cb Callback that must return a promise.
- * @returns State, value, error of the promise and a function to run promise.
+ * @returns State, value, error of the promise and a function to run the resolution.
  * @example
  * ```tsx
  * function Component() {
@@ -107,9 +107,14 @@ export function useForce(): () => void {
  * @example
  * ```tsx
  * function Component() {
- * 	const prev = usePrevious(1);
+ * 	const [state, setState] = React.useState(0);
+ * 	const prev = usePrevious(state);
  * 	return (
- * 		<p>Previous value is: {prev}</p>
+ * 		<>
+ * 			<p>Previous value is: {prev}</p>
+ * 			<p>Current value is: {state}</p>
+ * 			<button onClick={() => setState(x => ++x)}>Increment</button>
+ * 		</>
  * 	);
  * }
  * ```
@@ -121,7 +126,7 @@ export function usePrevious<T>(value: T): T {
 }
 
 /**
- * Creates a boolean that can be toggled.
+ * Creates a boolean that can be toggled, switched, set.
  * @param init Initial value.
  * @returns An object with hooks.
  * @example
@@ -144,10 +149,10 @@ export function useBoolean(init: boolean): UseBooleanReturn {
 	const [value, setValue] = React.useState(init);
 	return {
 		value,
-		toggle: React.useCallback(() => setValue(value => !value), []),
+		toggle: React.useCallback(() => setValue(value => !value), [init]),
 		setValue,
-		setTrue: React.useCallback(() => setValue(true), []),
-		setFalse: React.useCallback(() => setValue(false), [])
+		setTrue: React.useCallback(() => setValue(true), [init]),
+		setFalse: React.useCallback(() => setValue(false), [init])
 	};
 }
 
@@ -241,10 +246,31 @@ function useResource(type: "img" | "link" | "script", url: string): UseResourceR
 type UsePromise<T, U, V extends boolean> = [state: PromiseState, value: T | undefined, error: U | undefined, run: V extends true ? (() => void) : never];
 
 type UseBooleanReturn = {
+
+	/**
+	 * Current value.
+	 */
 	value: boolean;
+
+	/**
+	 * Changes the value to the opposite.
+	 */
 	toggle(): void;
+
+	/**
+	 * Sets the value.
+	 * @param value Value to set.
+	 */
 	setValue(value: boolean): void;
+
+	/**
+	 * Sets the value to `true`.
+	 */
 	setTrue(): void;
+
+	/**
+	 * Sets the value to `false`.
+	 */
 	setFalse(): void;
 }
 

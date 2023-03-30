@@ -1,9 +1,6 @@
-import "mocha";
-import * as assert from "node:assert";
 import * as React from "react";
-import * as sandbox from "@stein197/mocha-sandbox";
+import * as sandbox from "@stein197/test-sandbox";
 import * as rehook from ".";
-const ReactDOMTestUtils = require("react-dom/test-utils");
 
 const setTimeoutOriginal = globalThis.setTimeout;
 
@@ -17,73 +14,124 @@ sandbox(globalThis, sb => {
 					<p className="state">{String(state)}</p>
 					<p className="value">{String(value)}</p>
 					<p className="error">{String(error)}</p>
-					<button onClick={run} />
+					<button onClick={run}>Run</button>
 				</>
 			);
 		}
 		describe("useAsync(promise)", () => {
-			it("Should return pending state and undefined as result and error right after initialization", async () => {
+			it("Should return pending state and undefined as result and error right after initialization", () => sb
+				.render(<Component promise={timeout(100)} />)
+				.equals(sb => sb.find(".state")!.textContent, "pending")
+				.equals(sb => sb.find(".value")!.textContent, "undefined")
+				.equals(sb => sb.find(".error")!.textContent, "undefined")
+				.run()
+			);
+			it("Should return fulfilled state, an expected result and undefined as an error when the promise is resolved", () => {
 				const promise = timeout(100, "fulfilled", "result", "error");
-				await sb.render(<Component promise={promise} />);
-				assert.equal(sb.find(".state")!.textContent, "pending");
-				assert.equal(sb.find(".value")!.textContent, "undefined");
-				assert.equal(sb.find(".error")!.textContent, "undefined");
+				return sb
+					.render(<Component promise={promise} />)
+					.await(promise)
+					.equals(sb => sb.find(".state")!.textContent, "fulfilled")
+					.equals(sb => sb.find(".value")!.textContent, "result")
+					.equals(sb => sb.find(".error")!.textContent, "undefined")
+					.run()
 			});
-			it("Should return fulfilled state, an expected result and undefined as an error when the promise is resolved", async () => {
-				const promise = timeout(100, "fulfilled", "result", "error");
-				await sb.renderAsync(<Component promise={promise} />, promise);
-				assert.equal(sb.find(".state")!.textContent, "fulfilled");
-				assert.equal(sb.find(".value")!.textContent, "result");
-				assert.equal(sb.find(".error")!.textContent, "undefined");
-			});
-			it("Should return rejected state, undefined as a result and an error when the promise is rejected", async () => {
+			it("Should return rejected state, undefined as a result and an error when the promise is rejected", () => {
 				const promise = timeout(100, "rejected", "result", "error");
-				await sb.renderAsync(<Component promise={promise} />, promise);
-				assert.equal(sb.find(".state")!.textContent, "rejected");
-				assert.equal(sb.find(".value")!.textContent, "undefined");
-				assert.equal(sb.find(".error")!.textContent, "error");
+				return sb
+					.render(<Component promise={promise} />)
+					.await(promise)
+					.equals(sb => sb.find(".state")!.textContent, "rejected")
+					.equals(sb => sb.find(".value")!.textContent, "undefined")
+					.equals(sb => sb.find(".error")!.textContent, "error")
+					.run()
 			});
-			it.skip("Should reset state when a new promise is passed", async () => {});
+			it("Should reset state when a new promise is passed", () => {
+				function Component1(): JSX.Element {
+					const [promise, setPromise] = React.useState(timeout(100, "fulfilled", "result", "error"));
+					return (
+						<>
+							<Component promise={promise} />
+							<button onClick={() => setPromise(timeout(100, "fulfilled", "result", "error"))}>Update</button>
+						</>
+					);
+				}
+				return sb
+					.render(<Component1 />)
+					.timeout(150)
+					.equals(sb => sb.find(".state")!.textContent, "fulfilled")
+					.equals(sb => sb.find(".value")!.textContent, "result")
+					.equals(sb => sb.find(".error")!.textContent, "undefined")
+					.simulate(sb => sb.findByText("Update")!, "click")
+					.equals(sb => sb.find(".state")!.textContent, "pending")
+					.equals(sb => sb.find(".value")!.textContent, "undefined")
+					.equals(sb => sb.find(".error")!.textContent, "undefined")
+					.run()
+			});
 		});
 
 		describe("useAsync(() => promise)", () => {
-			it("Should not run promise function when the runner is not called", async () => {
-				const promise = timeout(100);
-				await sb.render(<Component promise={() => promise} />);
-				await timeout(200);
-				assert.equal(sb.find(".state")!.textContent, "pending");
-				assert.equal(sb.find(".value")!.textContent, "undefined");
-				assert.equal(sb.find(".error")!.textContent, "undefined");
-			});
-			it("Should return pending state and undefined as result and error right after initialization", async () => {
-				const promise = timeout(100);
-				await sb.render(<Component promise={() => promise} />);
-				await sb.find("button")!.click();
-				assert.equal(sb.find(".state")!.textContent, "pending");
-				assert.equal(sb.find(".value")!.textContent, "undefined");
-				assert.equal(sb.find(".error")!.textContent, "undefined");
-			});
-			it("Should return fulfilled state, an expected result and undefined as an error when the callback is fired and the promise is resolved", async () => {
+			it("Should not run promise function when the runner is not called", () => sb
+				.render(<Component promise={() => timeout(100)} />)
+				.timeout(150)
+				.equals(sb => sb.find(".state")!.textContent, "pending")
+				.equals(sb => sb.find(".value")!.textContent, "undefined")
+				.equals(sb => sb.find(".error")!.textContent, "undefined")
+				.run()
+			);
+			it("Should return pending state and undefined as result and error right after initialization", () => sb
+				.render(<Component promise={() => timeout(100)} />)
+				.simulate(sb => sb.find("button")!, "click")
+				.equals(sb => sb.find(".state")!.textContent, "pending")
+				.equals(sb => sb.find(".value")!.textContent, "undefined")
+				.equals(sb => sb.find(".error")!.textContent, "undefined")
+				.run()
+			);
+			it("Should return fulfilled state, an expected result and undefined as an error when the callback is fired and the promise is resolved", () => {
 				const promise = timeout(100, "fulfilled", "result", "error");
-				await sb.react(<Component promise={() => promise} />, async () => {
-					await sb.find("button")!.click();
-					await timeout(100);
-				});
-				assert.equal(sb.find(".state")!.textContent, "fulfilled");
-				assert.equal(sb.find(".value")!.textContent, "result");
-				assert.equal(sb.find(".error")!.textContent, "undefined");
+				return sb
+					.render(<Component promise={() => promise} />)
+					.simulate(sb => sb.find("button")!, "click")
+					.await(promise)
+					.equals(sb => sb.find(".state")!.textContent, "fulfilled")
+					.equals(sb => sb.find(".value")!.textContent, "result")
+					.equals(sb => sb.find(".error")!.textContent, "undefined")
+					.run();
 			});
-			it("Should return rejected state, undefined as a result and an error when the callback is fired and the promise is resolved", async () => {
+			it("Should return rejected state, undefined as a result and an error when the callback is fired and the promise is resolved", () => {
 				const promise = timeout(100, "rejected", "result", "error");
-				await sb.react(<Component promise={() => promise} />, async () => {
-					await sb.find("button")!.click();
-					await timeout(200);
-				});
-				assert.equal(sb.find(".state")!.textContent, "rejected");
-				assert.equal(sb.find(".value")!.textContent, "undefined");
-				assert.equal(sb.find(".error")!.textContent, "error");
+				return sb
+					.render(<Component promise={() => promise} />)
+					.simulate(sb => sb.find("button")!, "click")
+					.await(promise)
+					.equals(sb => sb.find(".state")!.textContent, "rejected")
+					.equals(sb => sb.find(".value")!.textContent, "undefined")
+					.equals(sb => sb.find(".error")!.textContent, "error")
+					.run();
 			});
-			it.skip("Should reset state when a new callback is passed", async () => {});
+			it("Should reset state when a new callback is passed", () => {
+				function Component1(): JSX.Element {
+					const [promise, setPromise] = React.useState<any>(() => timeout(100, "fulfilled", "result", "error"));
+					return (
+						<>
+							<Component promise={promise} />
+							<button onClick={() => setPromise(() => () => timeout(100, "fulfilled", "result", "error"))}>Update</button>
+						</>
+					);
+				}
+				return sb
+					.render(<Component1 />)
+					.simulate(sb => sb.findByText("Run")!, "click")
+					.timeout(150)
+					.equals(sb => sb.find(".state")!.textContent, "fulfilled")
+					.equals(sb => sb.find(".value")!.textContent, "result")
+					.equals(sb => sb.find(".error")!.textContent, "undefined")
+					.simulate(sb => sb.findByText("Update")!, "click")
+					.equals(sb => sb.find(".state")!.textContent, "pending")
+					.equals(sb => sb.find(".value")!.textContent, "undefined")
+					.equals(sb => sb.find(".error")!.textContent, "undefined")
+					.run()
+			});
 		});
 	});
 	
@@ -94,14 +142,13 @@ sandbox(globalThis, sb => {
 				<button onClick={force}>Rerender</button>
 			);
 		}
-		it("Should rerender each time whenever the callback is called", async () => {
-			const tracker = new assert.CallTracker();
-			const TrackedComponent = tracker.calls(Component, 3);
-			await sb.render(<TrackedComponent />);
-			await sb.find("button")!.click();
-			await sb.find("button")!.click();
-			tracker.verify();
-		});
+		it("Should rerender each time whenever the callback is called", () => sb
+			.render(<Component />)
+			.simulate(sb => sb.find("button")!, "click")
+			.simulate(sb => sb.find("button")!, "click")
+			.rerenders(3)
+			.run()
+		);
 	});
 
 	describe("usePrevious()", () => {
@@ -115,14 +162,15 @@ sandbox(globalThis, sb => {
 				</>
 			);
 		}
-		it("Should correctly save previous value", async () => {
-			await sb.render(<Component />);
-			assert.equal(sb.find("p")!.textContent, "prev: 0, cur: 0");
-			await sb.find("button")!.click();
-			assert.equal(sb.find("p")!.textContent, "prev: 0, cur: 1");
-			await sb.find("button")!.click();
-			assert.equal(sb.find("p")!.textContent, "prev: 1, cur: 2");
-		});
+		it("Should correctly save previous value", () => sb
+			.render(<Component />)
+			.equals(sb => sb.find("p")!.textContent, "prev: 0, cur: 0")
+			.simulate(sb => sb.find("button")!, "click")
+			.equals(sb => sb.find("p")!.textContent, "prev: 0, cur: 1")
+			.simulate(sb => sb.find("button")!, "click")
+			.equals(sb => sb.find("p")!.textContent, "prev: 1, cur: 2")
+			.run()
+		);
 	});
 
 	describe("useBoolean()", () => {
@@ -137,30 +185,33 @@ sandbox(globalThis, sb => {
 				</>
 			);
 		}
-		it("Should toggle the value when calling toggle()", async () => {
-			await sb.render(<Component init={true} />);
-			assert.equal(sb.find("p")!.textContent, "true");
-			await sb.findByText("toggle")!.click();
-			assert.equal(sb.find("p")!.textContent, "false");
-			await sb.findByText("toggle")!.click();
-			assert.equal(sb.find("p")!.textContent, "true");
-		});
-		it("Should always set to true when calling setTrue()", async () => {
-			await sb.render(<Component init={false} />);
-			assert.equal(sb.find("p")!.textContent, "false");
-			await sb.findByText("setTrue")!.click();
-			assert.equal(sb.find("p")!.textContent, "true");
-			await sb.findByText("setTrue")!.click();
-			assert.equal(sb.find("p")!.textContent, "true");
-		});
-		it("Should always set to false when calling setFalse()", async () => {
-			await sb.render(<Component init={true} />);
-			assert.equal(sb.find("p")!.textContent, "true");
-			await sb.findByText("setFalse")!.click();
-			assert.equal(sb.find("p")!.textContent, "false");
-			await sb.findByText("setFalse")!.click();
-			assert.equal(sb.find("p")!.textContent, "false");
-		});
+		it("Should toggle the value when calling toggle()", () => sb
+			.render(<Component init={true} />)
+			.equals(sb => sb.find("p")!.textContent, "true")
+			.simulate(sb => sb.findByText("toggle")!, "click")
+			.equals(sb => sb.find("p")!.textContent, "false")
+			.simulate(sb => sb.findByText("toggle")!, "click")
+			.equals(sb => sb.find("p")!.textContent, "true")
+			.run()
+		);
+		it("Should always set to true when calling setTrue()", () => sb
+			.render(<Component init={false} />)
+			.equals(sb => sb.find("p")!.textContent, "false")
+			.simulate(sb => sb.findByText("setTrue")!, "click")
+			.equals(sb => sb.find("p")!.textContent, "true")
+			.simulate(sb => sb.findByText("setTrue")!, "click")
+			.equals(sb => sb.find("p")!.textContent, "true")
+			.run()
+		);
+		it("Should always set to false when calling setFalse()", () => sb
+			.render(<Component init={true} />)
+			.equals(sb => sb.find("p")!.textContent, "true")
+			.simulate(sb => sb.findByText("setFalse")!, "click")
+			.equals(sb => sb.find("p")!.textContent, "false")
+			.simulate(sb => sb.findByText("setFalse")!, "click")
+			.equals(sb => sb.find("p")!.textContent, "false")
+			.run()
+		);
 	});
 });
 

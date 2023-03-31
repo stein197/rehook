@@ -83,6 +83,37 @@ export function useAsync<T, U>(a: Promise<T> | (() => Promise<T>)): UsePromise<T
 }
 
 /**
+ * Creates a boolean that can be toggled, switched, set.
+ * @param init Initial value.
+ * @returns An object with hooks.
+ * @example
+ * ```tsx
+ * function Component(props: {init: boolean}): React.ReactNode {
+ * 	const bool = useBoolean(props.init);
+ * 	return (
+ * 		<>
+ * 			<p>{bool.value.toString()}</p>
+ * 			<button onClick={bool.toggle}>toggle</button>
+ * 			<button onClick={bool.setValue}>setValue</button>
+ * 			<button onClick={bool.setTrue}>setTrue</button>
+ * 			<button onClick={bool.setFalse}>setFalse</button>
+ * 		</>
+ * 	);
+ * }
+ * ```
+ */
+export function useBoolean(init: boolean): UseBooleanReturn {
+	const [value, setValue] = React.useState(init);
+	return {
+		value,
+		toggle: React.useCallback(() => setValue(value => !value), [init]),
+		setValue,
+		setTrue: React.useCallback(() => setValue(true), [init]),
+		setFalse: React.useCallback(() => setValue(false), [init])
+	};
+}
+
+/**
  * Forces rerender.
  * @returns Callback to call in order to rerender a component.
  * @example
@@ -126,37 +157,6 @@ export function usePrevious<T>(value: T): T {
 }
 
 /**
- * Creates a boolean that can be toggled, switched, set.
- * @param init Initial value.
- * @returns An object with hooks.
- * @example
- * ```tsx
- * function Component(props: {init: boolean}): React.ReactNode {
- * 	const bool = useBoolean(props.init);
- * 	return (
- * 		<>
- * 			<p>{bool.value.toString()}</p>
- * 			<button onClick={bool.toggle}>toggle</button>
- * 			<button onClick={bool.setValue}>setValue</button>
- * 			<button onClick={bool.setTrue}>setTrue</button>
- * 			<button onClick={bool.setFalse}>setFalse</button>
- * 		</>
- * 	);
- * }
- * ```
- */
-export function useBoolean(init: boolean): UseBooleanReturn {
-	const [value, setValue] = React.useState(init);
-	return {
-		value,
-		toggle: React.useCallback(() => setValue(value => !value), [init]),
-		setValue,
-		setTrue: React.useCallback(() => setValue(true), [init]),
-		setFalse: React.useCallback(() => setValue(false), [init])
-	};
-}
-
-/**
  * Loads an image.
  * @param url Image URL.
  * @returns Loaded flag and error object.
@@ -175,24 +175,6 @@ export function useImage(url: string): UseResourceReturn {
 }
 
 /**
- * Loads a stylesheet.
- * @param url Stylesheet URL.
- * @returns Loaded flag and error object.
- * @example
- * ```tsx
- * function Component(): JSX.Element {
- * 	const [loaded, error] = useStylesheet("https://domain.com/index.css");
- * 	return (
- * 		loaded ? <div>Loaded</div> : <div>Loading...</div>
- * 	);
- * }
- * ```
- */
-export function useStylesheet(url: string): UseResourceReturn {
-	return useResource("link", url);
-}
-
-/**
  * Loads a script.
  * @param url Script URL.
  * @returns Loaded flag and error object.
@@ -208,6 +190,24 @@ export function useStylesheet(url: string): UseResourceReturn {
  */
 export function useScript(url: string): UseResourceReturn {
 	return useResource("script", url);
+}
+
+/**
+ * Loads a stylesheet.
+ * @param url Stylesheet URL.
+ * @returns Loaded flag and error object.
+ * @example
+ * ```tsx
+ * function Component(): JSX.Element {
+ * 	const [loaded, error] = useStylesheet("https://domain.com/index.css");
+ * 	return (
+ * 		loaded ? <div>Loaded</div> : <div>Loading...</div>
+ * 	);
+ * }
+ * ```
+ */
+export function useStylesheet(url: string): UseResourceReturn {
+	return useResource("link", url);
 }
 
 function useResource(type: "img" | "link" | "script", url: string): UseResourceReturn {

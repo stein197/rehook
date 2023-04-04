@@ -3,7 +3,7 @@ import * as sandbox from "@stein197/test-sandbox";
 import * as rehook from ".";
 
 const setTimeoutOriginal = globalThis.setTimeout;
-const TIMEOUT_PROMISE = 10;
+const TIMEOUT_PROMISE = 50;
 const TIMEOUT_PROMISE_RESOLVE = TIMEOUT_PROMISE + 5;
 
 sandbox.go(globalThis, sb => {

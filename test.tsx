@@ -6,7 +6,7 @@ const setTimeoutOriginal = globalThis.setTimeout;
 const TIMEOUT_PROMISE = 10;
 const TIMEOUT_PROMISE_RESOLVE = TIMEOUT_PROMISE + 5;
 
-sandbox(globalThis, sb => {
+sandbox.go(globalThis, sb => {
 	describe("useAsync()", () => {
 		function Component(props: {promise: Promise<any> | (() => Promise<any>)}): JSX.Element {
 			// @ts-ignore

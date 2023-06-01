@@ -132,6 +132,58 @@ export function useForce(): () => void {
 }
 
 /**
+ * Manages CSS classnames.
+ * @param names Initial classnames.
+ * @returns A object that manages classnames.
+ * @example
+ * ```tsx
+ * function Component() {
+ * 	const className = useClassName("first");
+ * 	return (
+ * 		<div className={className}>
+ * 			<button onClick={() => className.add("second")}>Add "second"</button>
+ * 			<button onClick={() => className.remove("second")}>Remove "second"</button>
+ * 			<button onClick={() => className.toggle("second")}>Toggle "second"</button>
+ * 		</div>
+ * 	);
+ * }
+ * ```
+ */
+export function useClassName(...names: string[]): UseClassNameReturn {
+	const [className, setClassName] = React.useState<string[]>(names);
+	return React.useMemo(() => ({
+		get className() {
+			return className.join(" ");
+		},
+
+		add(name: string) {
+			if (!className.includes(name))
+				setClassName([...className, name]);
+		},
+
+		remove(name: string) {
+			if (className.includes(name))
+				setClassName(className.filter(item => item != name));
+		},
+
+		has(name: string) {
+			return className.includes(name);
+		},
+
+		toggle(name: string) {
+			if (className.includes(name))
+				this.remove(name);
+			else
+				this.add(name);
+		},
+
+		toString() {
+			return this.className;
+		}
+	}), className);
+}
+
+/**
  * Saves the previous value.
  * @param value Value to save.
  * @returns Previous value.
@@ -273,6 +325,39 @@ type UseBooleanReturn = {
 	 */
 	setFalse(): void;
 }
+
+type UseClassNameReturn = {
+
+	/**
+	 * Class name. The same behavior as `toString()` for the object.
+	 */
+	readonly className: string;
+
+	/**
+	 * Add a string to the classname.
+	 * @param name Name to add.
+	 */
+	add(name: string): void;
+
+	/**
+	 * Remove a name from the classname.
+	 * @param name Name to remove.
+	 */
+	remove(name: string): void;
+
+	/**
+	 * Checks if the classname contains the provided name.
+	 * @param name Name to check.
+	 * @returns `true` if the name contains in the classname.
+	 */
+	has(name: string): boolean;
+
+	/**
+	 * Toggle a name.
+	 * @param name Name to toggle.
+	 */
+	toggle(name: string): void;
+};
 
 type UseResourceReturn = [loaded: boolean, error: any];
 

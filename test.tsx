@@ -153,6 +153,9 @@ sandbox.go(globalThis, sb => {
 		);
 	});
 
+	// TODO
+	describe("useClassName()", () => {});
+
 	describe("usePrevious()", () => {
 		function Component() {
 			const [value, setValue] = React.useState(0);

@@ -153,8 +153,26 @@ sandbox.go(globalThis, sb => {
 		);
 	});
 
-	// TODO
-	describe("useClassName()", () => {});
+	describe("useClassName()", () => {
+
+		// TODO
+		describe("className", () => {});
+
+		// TODO
+		describe("add()", () => {});
+
+		// TODO
+		describe("remove()", () => {});
+
+		// TODO
+		describe("has()", () => {});
+
+		// TODO
+		describe("toggle()", () => {});
+
+		// TODO
+		describe("toString()", () => {});
+	});
 
 	describe("usePrevious()", () => {
 		function Component() {

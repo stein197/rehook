@@ -227,7 +227,7 @@ export function useImage(url: string): UseResourceReturn {
 }
 
 /**
- * Loads a script.
+ * Loads a script and appends it to the `<head />`.
  * @param url Script URL.
  * @returns Loaded flag and error object.
  * @example
@@ -245,7 +245,7 @@ export function useScript(url: string): UseResourceReturn {
 }
 
 /**
- * Loads a stylesheet.
+ * Loads a stylesheet and appends it to the `<head />`.
  * @param url Stylesheet URL.
  * @returns Loaded flag and error object.
  * @example

@@ -138,7 +138,7 @@ export function useForce(): () => void {
  * @example
  * ```tsx
  * function Component() {
- * 	const className = useClassName("first");
+ * 	const className = useClassName<"first" | "second">("first");
  * 	return (
  * 		<div className={className}>
  * 			<button onClick={() => className.add("second")}>Add "second"</button>
@@ -149,28 +149,28 @@ export function useForce(): () => void {
  * }
  * ```
  */
-export function useClassName(...names: string[]): UseClassNameReturn {
+export function useClassName<T extends string>(...names: T[]): UseClassNameReturn<T> {
 	const [className, setClassName] = React.useState<string[]>(names);
 	return React.useMemo(() => ({
 		get className() {
 			return className.join(" ");
 		},
 
-		add(name: string) {
+		add(name: T) {
 			if (!className.includes(name))
 				setClassName([...className, name]);
 		},
 
-		remove(name: string) {
+		remove(name: T) {
 			if (className.includes(name))
 				setClassName(className.filter(item => item != name));
 		},
 
-		has(name: string) {
+		has(name: T) {
 			return className.includes(name);
 		},
 
-		toggle(name: string) {
+		toggle(name: T) {
 			if (className.includes(name))
 				this.remove(name);
 			else
@@ -326,7 +326,7 @@ type UseBooleanReturn = {
 	setFalse(): void;
 }
 
-type UseClassNameReturn = {
+type UseClassNameReturn<T extends string> = {
 
 	/**
 	 * Class name. The same behavior as `toString()` for the object.
@@ -334,29 +334,34 @@ type UseClassNameReturn = {
 	readonly className: string;
 
 	/**
+	 * Class names as an array.
+	 */
+	readonly classNameList: T[];
+
+	/**
 	 * Add a string to the classname.
 	 * @param name Name to add.
 	 */
-	add(name: string): void;
+	add(name: T): void;
 
 	/**
 	 * Remove a name from the classname.
 	 * @param name Name to remove.
 	 */
-	remove(name: string): void;
+	remove(name: T): void;
 
 	/**
 	 * Checks if the classname contains the provided name.
 	 * @param name Name to check.
 	 * @returns `true` if the name contains in the classname.
 	 */
-	has(name: string): boolean;
+	has(name: T): boolean;
 
 	/**
 	 * Toggle a name.
 	 * @param name Name to toggle.
 	 */
-	toggle(name: string): void;
+	toggle(name: T): void;
 };
 
 type UseResourceReturn = [loaded: boolean, error: any];

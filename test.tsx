@@ -159,9 +159,6 @@ sandbox.go(globalThis, sb => {
 		describe("className", () => {});
 
 		// TODO
-		describe("classNameList", () => {});
-
-		// TODO
 		describe("add()", () => {});
 
 		// TODO

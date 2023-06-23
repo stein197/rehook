@@ -149,11 +149,11 @@ export function useForce(): () => void {
  * }
  * ```
  */
-export function useClassName<T extends string>(...names: T[]): UseClassNameReturn<T> {
+export function useClassName<T extends string = string>(...names: T[]): UseClassNameReturn<T> {
 	const [className, setClassName] = React.useState<string[]>(names);
 	return React.useMemo(() => ({
 		get className() {
-			return className.join(" ");
+			return className.slice();
 		},
 
 		add(name: T) {
@@ -178,7 +178,7 @@ export function useClassName<T extends string>(...names: T[]): UseClassNameRetur
 		},
 
 		toString() {
-			return this.className;
+			return this.className.join(" ");
 		}
 	}), className);
 }
@@ -329,14 +329,9 @@ type UseBooleanReturn = {
 type UseClassNameReturn<T extends string> = {
 
 	/**
-	 * Class name. The same behavior as `toString()` for the object.
+	 * Class name as an array.
 	 */
-	readonly className: string;
-
-	/**
-	 * Class names as an array.
-	 */
-	readonly classNameList: T[];
+	readonly className: string[];
 
 	/**
 	 * Add a string to the classname.

@@ -184,6 +184,37 @@ export function useClassName<T extends string = string>(...names: T[]): UseClass
 }
 
 /**
+ * Listens for clicks outside the passed element.
+ * @param ref Element to listen clicks outside of.
+ * @param f Function to call when a click outside the element is triggered. Accepts {@link MouseEvent} argument.
+ * @example
+ * ```tsx
+ * function Component() {
+ * 	const ref = React.useRef(null);
+ * 	useClickOutside(ref, () => {
+ * 		console.log("Click outside of the component!");
+ * 	});
+ * 	return (
+ * 		<div ref={ref}>Hello, World!</div>
+ * 	);
+ * }
+ * ```
+ */
+export function useClickOutside<T extends HTMLElement>(ref: React.RefObject<T>, f: (e: MouseEvent) => void): void {
+	React.useEffect(() => {
+		function onClick(e: MouseEvent): void {
+			let curElement = e.target as HTMLElement;
+			while (curElement != null && curElement != ref.current)
+				curElement = curElement.parentElement;
+			if (curElement == null)
+				f(e);
+		}
+		globalThis.document.addEventListener("click", onClick);
+		return () => globalThis.document.removeEventListener("click", onClick);
+	}, [ref, f]);
+}
+
+/**
  * Saves the previous value.
  * @param value Value to save.
  * @returns Previous value.

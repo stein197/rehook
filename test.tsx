@@ -174,6 +174,9 @@ sandbox.go(globalThis, sb => {
 		describe("toString()", () => {});
 	});
 
+	// TODO
+	describe.skip("useClickOutside()", () => {});
+
 	describe("usePrevious()", () => {
 		function Component() {
 			const [value, setValue] = React.useState(0);

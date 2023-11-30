@@ -157,6 +157,50 @@ export function usePrevious<T>(value: T): T {
 }
 
 /**
+ * Read, write and subscribe on sessionStorage.
+ * @param key Key by which to read and write the data.
+ * @returns Current value and setter for the value.
+ * @example
+ * ```tsx
+ * function Component(props: {key: string}) {
+ * 	const [value, setValue] = useSessionStorage(props.key);
+ * 	return (
+ * 		<div>
+ * 			<p>Key: {props.key}</p>
+ * 			<p>Value: {value}</p>
+ * 			<button onClick={() => setValue((value ?? 0) + 1)}>Increase</button>
+ * 		</div>
+ * 	);
+ * }
+ * ```
+ */
+export function useSessionStorage<T>(key: string): UseStorageReturn<T> {
+	return useStorage("sessionStorage", key);
+}
+
+/**
+ * Read, write and subscribe on localStorage.
+ * @param key Key by which to read and write the data.
+ * @returns Current value and setter for the value.
+ * @example
+ * ```tsx
+ * function Component(props: {key: string}) {
+ * 	const [value, setValue] = useLocalStorage(props.key);
+ * 	return (
+ * 		<div>
+ * 			<p>Key: {props.key}</p>
+ * 			<p>Value: {value}</p>
+ * 			<button onClick={() => setValue((value ?? 0) + 1)}>Increase</button>
+ * 		</div>
+ * 	);
+ * }
+ * ```
+ */
+export function useLocalStorage<T>(key: string): UseStorageReturn<T> {
+	return useStorage("localStorage", key);
+}
+
+/**
  * Loads an image.
  * @param url Image URL.
  * @returns Loaded flag and error object.
@@ -243,6 +287,36 @@ function useResource(type: "img" | "link" | "script", url: string): UseResourceR
 	return [loaded, error];
 }
 
+function useStorage<T>(type: "localStorage" | "sessionStorage", key: string): UseStorageReturn<T> {
+	const storage = globalThis[type];
+	const [value, setValue] = React.useState(tryJSONParse(storage.getItem(key)));
+	const set = React.useCallback((v: T) => {
+		if (v == null)
+			storage.removeItem(key);
+		else
+			storage.setItem(key, JSON.stringify(v));
+		setValue(v);
+	}, [type, key]);
+	React.useEffect(() => {
+		function onStorage(e: StorageEvent): void {
+			if (e.storageArea !== storage || e.key !== key)
+				return;
+			setValue(tryJSONParse(e.newValue));
+		}
+		globalThis.addEventListener("storage", onStorage);
+		return () => globalThis.removeEventListener("storage", onStorage);
+	}, [type, key]);
+	return [value, set];
+}
+
+function tryJSONParse(value: string): object | string {
+	try {
+		return JSON.parse(value);
+	} catch {
+		return value;
+	}
+}
+
 type UsePromise<T, U, V extends boolean> = [state: PromiseState, value: T | undefined, error: U | undefined, run: V extends true ? (() => void) : never];
 
 type UseBooleanReturn = {
@@ -275,5 +349,7 @@ type UseBooleanReturn = {
 }
 
 type UseResourceReturn = [loaded: boolean, error: any];
+
+type UseStorageReturn<T> = [value: T | null, setValue: (value: T | null) => void];
 
 type PromiseState = "pending" | "fulfilled" | "rejected";

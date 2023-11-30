@@ -175,6 +175,12 @@ sandbox.go(globalThis, sb => {
 		);
 	});
 
+	// TODO
+	describe.skip("useLocalStorage()", () => {});
+
+	// TODO
+	describe.skip("useSessionStorage()", () => {});
+
 	describe("useBoolean()", () => {
 		function Component(props: {init: boolean}): JSX.Element {
 			const bool = rehook.useBoolean(props.init);
